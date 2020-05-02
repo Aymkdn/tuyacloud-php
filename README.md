@@ -50,8 +50,10 @@ $tuya->setState([
 ]);
 
 // to get the state of a device
-echo "State Swtich 1 => ".$tuya->setState([
+echo "State Switch 1 => ".$tuya->setState([
   "name" => "switch 1"
 ]);
 ?>
 ```
+
+See [TuyaCloud.php](https://github.com/Aymkdn/tuyacloud-php/blob/master/TuyaCloud.php) for more details.

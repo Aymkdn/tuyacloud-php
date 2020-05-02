@@ -1,10 +1,12 @@
 # tuyacloud-php
 
-PHP Library to access to the SmartLife / Tuya objects using the Cloud of Home Assistant.
+PHP Library to access to the SmartLife / Tuya objects using the Cloud of Home Assistant API.
 
 It's based on https://github.com/unparagoned/cloudtuya
 
 ## Usage
+
+See [TuyaCloud.php](https://github.com/Aymkdn/tuyacloud-php/blob/master/TuyaCloud.php) for more details.
 
 ```php
 <?php
@@ -55,5 +57,3 @@ echo "State Switch 1 => ".$tuya->setState([
 ]);
 ?>
 ```
-
-See [TuyaCloud.php](https://github.com/Aymkdn/tuyacloud-php/blob/master/TuyaCloud.php) for more details.

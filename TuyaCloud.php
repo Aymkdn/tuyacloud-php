@@ -124,17 +124,23 @@ class TuyaCloud {
       $devId = $options['id'];
     }
 
+    $payload = [
+      "accessToken" => $this->accessToken,
+      "devId" => $devId
+    ];
+
+    if ($options['command'] === "colorSet") {
+      $payload["color"] = $value;
+    } else {
+      $payload["value"] = $value;
+    }
     $json = $this->post($this->uri.'/skill', [
       "header" => [
         "name" => $options['command'],
         "namespace" => 'control',
         "payloadVersion" => 1
       ],
-      "payload" => [
-        "accessToken" => $this->accessToken,
-        "devId" => $devId,
-        "value" => $value
-      ]
+      "payload" => $payload
     ]);
     return $json->header->code === "SUCCESS";
   }

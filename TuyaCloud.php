@@ -15,7 +15,7 @@ class TuyaCloud {
    *   @param {String} $countryCode Country code (International dialing number), e.g. "33" for France or "1" for USA
    *   @param {String} $region The region code: "az" for Americas, "ay" for Asia, "eu" for Europe
    */
-  function TuyaCloud($profile) {
+  function __construct($profile) {
     $this->profile = $profile;
     $this->profile['from'] = 'tuya';
     $this->uri = 'https://px1.tuya'.$profile["region"].'.com/homeassistant';

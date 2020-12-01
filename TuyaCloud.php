@@ -2,7 +2,6 @@
 class TuyaCloud {
   var $profile = [];
   var $uri = '';
-  var $tokens = '';
   var $accessToken = '';
 
   /**
@@ -38,7 +37,21 @@ class TuyaCloud {
   /**
    * It will login and get the tokens
    */
-  function login() {
+  function login($retry=0) {
+    // check if we have a valid token in memory
+    $SHM_KEY = ftok(__FILE__, chr(1));
+    $keyStore = crc32("tuyacloud_login");
+    $store = shm_attach($SHM_KEY);
+    if (shm_has_var($store, $keyStore)) {
+      $dataStore = shm_get_var($store, $keyStore);
+      $dataStore = json_decode($dataStore);
+      if ($dataStore->expire > time()) {
+        $this->accessToken = $dataStore->access_token;
+        return;
+      }
+    }
+
+    // if no data in memory, or token is not valid anymore
     $ch = curl_init($this->uri."/auth.do");
     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
     curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($this->profile));
@@ -48,8 +61,24 @@ class TuyaCloud {
     ));
 
     $data = curl_exec($ch);
-    $this->tokens = json_decode($data);
-    $this->accessToken = $this->tokens->access_token;
+    // $data is {"access_token":"xyz","refresh_token":"abc","token_type":"bearer","expires_in":864000}
+    $tokens = json_decode($data);
+    if (isset($tokens->access_token)) {
+      // save access_token for 864000 seconds using shm_put_var() because we cannot login more than once in 60 seconds
+      $dataStore = new stdClass();
+      $dataStore->access_token = $tokens->access_token;
+      $dataStore->expire = time()+$tokens->expires_in;
+      $this->accessToken = $tokens->access_token;
+
+      if (!shm_put_var($store, $keyStore, json_encode($dataStore))) throw new Exception("[tuyacloud] 'shm_put_var' failed to store the access_token");
+    }
+    else {
+      if ($retry === 5) throw new Exception("[tuyacloud] Unable to login: ".$data);
+      else {
+        sleep(1);
+        return $this->login(++$retry);
+      }
+    }
   }
 
   /**
@@ -58,6 +87,18 @@ class TuyaCloud {
    * @return {Array} Array of devices, e.g. [ {"data": {"online": true, "state": false}, "name": "Switch 1", "icon": "https://images.tuyaeu.com/smart/product_icon2/cz_1.png", "id": "4194aef6cb", "dev_type": "switch", "ha_type": "switch" }, …]
    */
   function getDevices() {
+    // limit of one scan every 600 seconds
+    $SHM_KEY = ftok(__FILE__, chr(1));
+    $keyStore = crc32("tuyacloud_devices");
+    $store = shm_attach($SHM_KEY);
+    if (shm_has_var($store, $keyStore)) {
+      $dataStore = shm_get_var($store, $keyStore);
+      $dataStore = json_decode($dataStore);
+      if ($dataStore->expire > time()) {
+        return json_decode($dataStore->devices);
+      }
+    }
+
     // Scan network otherwise or no device id in options
     $body = [
       "header" => [
@@ -70,6 +111,11 @@ class TuyaCloud {
       ]
     ];
     $json = $this->post($this->uri.'/skill', $body);
+    
+    $dataStore = new stdClass();
+    $dataStore->devices = json_encode($json->payload->devices);
+    $dataStore->expire = time()+600; // every 600 seconds
+    if (!shm_put_var($store, $keyStore, json_encode($dataStore))) throw new Exception("[tuyacloud] 'shm_put_var' failed to store the getDevices");
     return $json->payload->devices;
   }
 
@@ -124,23 +170,17 @@ class TuyaCloud {
       $devId = $options['id'];
     }
 
-    $payload = [
-      "accessToken" => $this->accessToken,
-      "devId" => $devId
-    ];
-
-    if ($options['command'] === "colorSet") {
-      $payload["color"] = $value;
-    } else {
-      $payload["value"] = $value;
-    }
     $json = $this->post($this->uri.'/skill', [
       "header" => [
         "name" => $options['command'],
         "namespace" => 'control',
         "payloadVersion" => 1
       ],
-      "payload" => $payload
+      "payload" => [
+        "accessToken" => $this->accessToken,
+        "devId" => $devId,
+        "value" => $value
+      ]
     ]);
     return $json->header->code === "SUCCESS";
   }

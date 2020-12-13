@@ -158,10 +158,10 @@ class TuyaCloud {
 
     // if we have the device name, find the ID
     if (isset($options['name'])) {
-      $options['name'] = strtolower($options['name']);
+      $deviceName = strtolower($options['name']);
       $devices = $this->getDevices();
       foreach($devices as $device) {
-        if (strtolower($device->name) === $options['name']) {
+        if (strtolower($device->name) === $deviceName) {
           $devId = $device->id;
           break;
         }
@@ -169,6 +169,8 @@ class TuyaCloud {
     } else {
       $devId = $options['id'];
     }
+
+    if (!isset($devId)) throw "[tuyacloud-php] Not able to find device '".$options['name']."'";
 
     $json = $this->post($this->uri.'/skill', [
       "header" => [
@@ -182,6 +184,7 @@ class TuyaCloud {
         "value" => $value
       ]
     ]);
+
     return $json->header->code === "SUCCESS";
   }
 

@@ -144,7 +144,7 @@ class TuyaCloud {
    *     -> "windSpeedSet" (value is fan_mode)
    *   - Light:
    *     -> "brightnessSet"
-   *     -> "colorSet" (value is hsv_color)
+   *     -> "colorSet" (value is an array of "hue" (0-255), "saturation" (0-255), "brightness" (0-255); e.g. ["hue" => 40, "saturation" => 255, "brightness" => 255])
    *     -> "colorTemperatureSet" (value is color_temp)
    */
   function setState($options) {
@@ -172,17 +172,23 @@ class TuyaCloud {
 
     if (!isset($devId)) throw "[tuyacloud-php] Not able to find device '".$options['name']."'";
 
+    $payload = [
+      "accessToken" => $this->accessToken,
+      "devId" => $devId
+    ];
+    if ($options['command'] === "colorSet") {
+      $payload["color"] = $value;
+    } else {
+      $payload["value"] = $value;
+    }
+
     $json = $this->post($this->uri.'/skill', [
       "header" => [
         "name" => $options['command'],
         "namespace" => 'control',
         "payloadVersion" => 1
       ],
-      "payload" => [
-        "accessToken" => $this->accessToken,
-        "devId" => $devId,
-        "value" => $value
-      ]
+      "payload" => $payload
     ]);
 
     return $json->header->code === "SUCCESS";

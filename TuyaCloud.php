@@ -70,10 +70,10 @@ class TuyaCloud {
       $dataStore->expire = time()+$tokens->expires_in;
       $this->accessToken = $tokens->access_token;
 
-      if (!shm_put_var($store, $keyStore, json_encode($dataStore))) throw new Exception("[tuyacloud] 'shm_put_var' failed to store the access_token");
+      if (!shm_put_var($store, $keyStore, json_encode($dataStore))) throw new Exception("[tuyacloud] 'shm_put_var' failed to store the access_token");
     }
     else {
-      if ($retry === 5) throw new Exception("[tuyacloud] Unable to login: ".$data);
+      if ($retry === 5) throw new Exception("[tuyacloud] Unable to login: ".$data);
       else {
         sleep(1);
         return $this->login(++$retry);
@@ -115,7 +115,7 @@ class TuyaCloud {
     $dataStore = new stdClass();
     $dataStore->devices = json_encode($json->payload->devices);
     $dataStore->expire = time()+600; // every 600 seconds
-    if (!shm_put_var($store, $keyStore, json_encode($dataStore))) throw new Exception("[tuyacloud] 'shm_put_var' failed to store the getDevices");
+    if (!shm_put_var($store, $keyStore, json_encode($dataStore))) throw new Exception("[tuyacloud] 'shm_put_var' failed to store the getDevices");
     return $json->payload->devices;
   }
 

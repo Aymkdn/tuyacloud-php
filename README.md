@@ -12,6 +12,8 @@ See [TuyaCloud.php](https://github.com/Aymkdn/tuyacloud-php/blob/master/TuyaClou
 <?php
 require 'TuyaCloud.php';
 
+// ATTENTION: it seems you have to keep "33" for the countryCode and "eu" for the region, wherever you are…
+//            -> see this comment: https://github.com/Aymkdn/tuyacloud-php/issues/9#issuecomment-1144097955
 $tuya = new TuyaCloud([
   "userName" => "email@domain.com", // username/email to access to SmartLife/Tuya app
   "password" => "MyPassword", // password to access to SmartLife/Tuya app

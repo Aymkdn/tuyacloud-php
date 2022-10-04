@@ -17,6 +17,7 @@ class TuyaCloud {
   function __construct($profile) {
     $this->profile = $profile;
     $this->profile['from'] = 'tuya';
+    // TODO: new URL https://github.com/tuya/tuya-iot-python-sdk/blob/efbc607ee971aa701e948bc09bdde6829b8a5331/tuya_iot/tuya_enums.py
     $this->uri = 'https://px1.tuya'.$profile["region"].'.com/homeassistant';
     // log in
     $this->login();
@@ -87,7 +88,7 @@ class TuyaCloud {
    * @return {Array} Array of devices, e.g. [ {"data": {"online": true, "state": false}, "name": "Switch 1", "icon": "https://images.tuyaeu.com/smart/product_icon2/cz_1.png", "id": "4194aef6cb", "dev_type": "switch", "ha_type": "switch" }, …]
    */
   function getDevices() {
-    // limit of one scan every 600 seconds
+    // limit of one scan every 1020 seconds
     $SHM_KEY = ftok(__FILE__, chr(1));
     $keyStore = crc32("tuyacloud_devices");
     $store = shm_attach($SHM_KEY);
@@ -114,7 +115,7 @@ class TuyaCloud {
     
     $dataStore = new stdClass();
     $dataStore->devices = json_encode($json->payload->devices);
-    $dataStore->expire = time()+600; // every 600 seconds
+    $dataStore->expire = time()+1020; // every 1020 seconds
     if (!shm_put_var($store, $keyStore, json_encode($dataStore))) throw new Exception("[tuyacloud] 'shm_put_var' failed to store the getDevices");
     return $json->payload->devices;
   }

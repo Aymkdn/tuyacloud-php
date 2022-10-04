@@ -54,7 +54,7 @@ $tuya->setState([
 ]);
 
 // to get the state of a device
-echo "State Switch 1 => ".$tuya->setState([
+echo "State Switch 1 => ".$tuya->getState([
   "name" => "switch 1"
 ]);
 ?>

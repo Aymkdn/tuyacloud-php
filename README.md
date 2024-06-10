@@ -2,7 +2,7 @@
 
 PHP Library to access to the SmartLife / Tuya objects using the Cloud of Home Assistant API.
 
-It's based on https://github.com/unparagoned/cloudtuya
+It's based on https://github.com/unparagoned/cloudtuya and https://github.com/tuya/tuya-smart-life
 
 Note: you need a Smartlife Account created with an email, not with Google Connection or similar third party. You could also create a new account from email and then invite this account to the "family" of your main Smartlife Account.
 

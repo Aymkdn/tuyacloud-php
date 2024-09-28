@@ -31,11 +31,11 @@ $options = [
   'secretKey' => 'sf94ryyrfvg3awvg4174m88wjpksytre', // access secret of your app
 ];
 
-$client = new TuyaCloud($options);
+$tuya = new TuyaCloud($options);
 try {
   // to get the device status
   // you must pass the device_id
-  $response = $client->getDevice('bfa18afnfyre87eb7ne0');
+  $response = $tuya->getDevice('bfa18afnfyre87eb7ne0');
   echo '<pre>';
   print_r($response);
   echo '</pre>';
@@ -52,9 +52,25 @@ try {
       ]
     ]
   ];
-  $response = $client->setDevice('bfa18afnfyre87eb7ne0', $commands);
+  $response = $tuya->setDevice('bfa18afnfyre87eb7ne0', $commands);
+  
+  // we can retrieve all the scenes (including their id)
+  $response = $tuya->getScenes();
+  echo '<pre>';
+  print_r($response);
+  echo '</pre>';
+  
+  // and we can start a scene
+  $response = $tuya->startScene('the_scene_id');
 } catch (Exception $e) {
   echo 'Error: ' . $e->getMessage();
 }
 ?>
 ```
+
+The different commands can be foundby going to your project in the [Tuya Cloud Development platform](https://eu.platform.tuya.com/cloud/), then click on the device and you can find the options.
+
+Examples:
+  - a curtain can have the `command` `open`, `close`, or `stop`
+  - a light will have `switch_led` with `true` or `false`
+  - a power strip with 2 outlets with have `switch_1` with `true` or `false`, and the same for `switch_2`

@@ -129,7 +129,6 @@ class TuyaCloud {
 
   /**
    * Get the device status/properties (`switch_led`, `bright_value`, `fan_switch`, …)
-   * Documentation: https://developer.tuya.com/en/docs/cloud/1ef1a3044b
    *
    * @param  {String} $deviceId The device id
    * @return {Object}           {success:(boolean), result:[{code, value}]}
@@ -141,7 +140,6 @@ class TuyaCloud {
 
   /**
    * Set the device properties (`switch_led`, `bright_value`, `fan_switch`, …)
-   * Documentation: https://developer.tuya.com/en/docs/cloud/e2512fb901
    *
    * @param  {String} $deviceId The device id
    * @param  {String|Object|Array} $commands An array of commands (e.g. `[{"code":"switch_led", "value":false}, {"code":"fan_switch", "value":true}`)
@@ -150,6 +148,44 @@ class TuyaCloud {
   public function setDevice($deviceId, $commands) {
     if (func_num_args() != 2) throw "[tuyacloud] You have to pass the `device_id` and the `commands` as arguments to this function 'setDevice'.";
     return $this->sendRequest('/v1.0/iot-03/devices/' . $deviceId. '/commands', 'POST', $commands);
+  }
+
+  /**
+   * Return a list of scenes for the user
+   *
+   * @return {Array} An array of {id, name, running_mode, space_id, status, type}
+   */
+  public function getScenes() {
+    // retrieve the spaces
+    // https://developer.tuya.com/en/docs/cloud/75a240f09b?id=Kcp2kv5bcvne7
+    $spaces = $this->sendRequest('/v2.0/cloud/space/child', 'GET');
+    if ($spaces['success'] != 1) throw "[tuyacloud] An error occured with space/child: ".$spaces['error_msg'];
+    // for each space, retrieve the related scenes
+    $spaces = $spaces['result']['data'];
+    $ret = [];
+    foreach($spaces as $spaceId) {
+      // if we need to find the space name:
+      // $spaceDetails = $this->sendRequest('/v2.0/cloud/space/'.$spaceId, 'GET');
+      // if ($spaceDetails['success'] != 1) throw "[tuyacloud] An error occured with space/".$spaceId.": ".$spaceDetails['error_msg'];
+      // $spaceName = $spaceDetails['result']['name'];
+      $scenesDetails = $this->sendRequest('/v2.0/cloud/scene/rule?space_id='.$spaceId, 'GET');
+      if ($scenesDetails['success'] != 1) throw "[tuyacloud] An error occured with scene/rule?space_id=".$spaceId.": ".$scenesDetails['error_msg'];
+      foreach($scenesDetails['result']['list'] as $scenes) {
+        array_push($ret, $scenes);
+      }
+    }
+    return $ret;
+  }
+
+  /**
+   * To start a scene
+   *
+   * @param  {String} $sceneId The scene id
+   * @return {Object}          The result of the action
+   */
+  public function startScene($sceneId) {
+    if (!isset($sceneId)) throw "[tuyacloud] You have to pass the `scene_id` as an argument to this function 'startScene'.";
+    return $this->sendRequest('/v2.0/cloud/scene/rule/'.$sceneId.'/actions/trigger', 'POST');
   }
 }
 ?>

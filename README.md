@@ -73,4 +73,4 @@ The different commands can be foundby going to your project in the [Tuya Cloud D
 Examples:
   - a curtain can have the `command` `open`, `close`, or `stop`
   - a light will have `switch_led` with `true` or `false`
-  - a power strip with 2 outlets with have `switch_1` with `true` or `false`, and the same for `switch_2`
+  - a power strip with 2 outlets will have `switch_1` with `true` or `false`, and the same for `switch_2`

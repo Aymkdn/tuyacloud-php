@@ -78,22 +78,35 @@ class TuyaCloud {
   }
 
   private function sendRequest($path, $method, $data = "{}") {
-    // $data can be a JSON string, an Array or an Object
-    // so we test
-    // check the JSON string is valid
-    if (is_string($data)) {
-      json_decode($data);
-      if (json_last_error() !== JSON_ERROR_NONE) {
-        throw new InvalidArgumentException("[tuyacloud] The argument must be a valid JSON string, an array, or a stdClass object.");
+    // Force empty string for GET requests (Tuya requirement for empty body hash)
+    if (strtoupper($method) === 'GET') {
+      $data = '';
+    } else {
+      // $data can be a JSON string, an Array or an Object
+      // so we test
+      // check the JSON string is valid
+      if (is_string($data)) {
+        json_decode($data);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+          throw new InvalidArgumentException("[tuyacloud] The argument must be a valid JSON string, an array, or a stdClass object.");
+        }
+      }    
+      // encode the array to a JSON string
+      else if (is_array($data)) {
+        $data = json_encode($data);
+      }    
+      // if it's a stdClass object, convert it to a JSON string
+      else if (is_object($data) && $data instanceof stdClass) {
+        $data = json_encode($data);
       }
-    }    
-    // encode the array to a JSON string
-    else if (is_array($data)) {
-      $data = json_encode($data);
-    }    
-    // if it's a stdClass object, convert it to a JSON string
-    else if (is_object($data) && $data instanceof stdClass) {
-      $data = json_encode($data);
+    }
+
+    // Tuya signature requirement: URL query parameters must be sorted alphabetically
+    $urlParts = explode('?', $path);
+    if (count($urlParts) > 1) {
+      $queryParts = explode('&', $urlParts[1]);
+      sort($queryParts); // Sort array values alphabetically
+      $path = $urlParts[0] . '?' . implode('&', $queryParts);
     }
 
     $timestamp = round(microtime(true) * 1000);
@@ -117,7 +130,8 @@ class TuyaCloud {
     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
-    if ($data !== null) {
+    // Only add body payload if it's not strictly empty
+    if ($data !== '') {
       curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
     }
 
@@ -148,6 +162,21 @@ class TuyaCloud {
   public function setDevice($deviceId, $commands) {
     if (func_num_args() != 2) throw "[tuyacloud] You have to pass the `device_id` and the `commands` as arguments to this function 'setDevice'.";
     return $this->sendRequest('/v1.0/iot-03/devices/' . $deviceId. '/commands', 'POST', $commands);
+  }
+
+  /**
+   * Get the device logs (e.g. fan_switch, countdown_left_fan)
+   *
+   * @param  {String} $deviceId The device id
+   * @param  {String} $codes  The codes to retrieve (e.g. `fan_switch,countdown_left_fan`)
+   * @param  {String} $start_time The start time in milliseconds (e.g. `1680000000000`)
+   * @param  {String} $end_time The end time in milliseconds (e.g. `1680003600000`)
+   * @param  {Integer} $size The number of logs to retrieve (default: 20)
+   * @return {Object}           {success:(boolean), result:[{code, value}]}
+   */
+  public function getDeviceLogs ($deviceId, $codes, $start_time, $end_time, $size = 20) {
+    if (func_num_args() < 4) throw "[tuyacloud] You have to pass all required arguments to this function 'getDeviceLogs'.";
+    return $this->sendRequest('/v2.0/cloud/thing/'.$deviceId.'/report-logs?codes='.$codes.'&start_time='.$start_time.'&end_time='.$end_time.'&size='.$size, 'GET');
   }
 
   /**

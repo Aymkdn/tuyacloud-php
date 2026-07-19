@@ -171,12 +171,13 @@ class TuyaCloud {
    * @param  {String} $codes  The codes to retrieve (e.g. `fan_switch,countdown_left_fan`)
    * @param  {String} $start_time The start time in milliseconds (e.g. `1680000000000`)
    * @param  {String} $end_time The end time in milliseconds (e.g. `1680003600000`)
-   * @param  {Integer} $size The number of logs to retrieve (default: 20)
+   * @param  {String} [$type=5] The type of logs to retrieve (e.g. `5` for command sending – see https://developer.tuya.com/en/docs/cloud/bdc1e6f858)
+   * @param  {Integer} [$size=20] The number of logs to retrieve (default: 20)
    * @return {Object}           {success:(boolean), result:[{code, value}]}
    */
-  public function getDeviceLogs ($deviceId, $codes, $start_time, $end_time, $size = 20) {
+  public function getDeviceLogs ($deviceId, $codes, $start_time, $end_time, $type = 5, $size = 20) {
     if (func_num_args() < 4) throw "[tuyacloud] You have to pass all required arguments to this function 'getDeviceLogs'.";
-    return $this->sendRequest('/v2.0/cloud/thing/'.$deviceId.'/report-logs?codes='.$codes.'&start_time='.$start_time.'&end_time='.$end_time.'&size='.$size, 'GET');
+    return $this->sendRequest('/v2.0/cloud/thing/'.$deviceId.'/logs?codes='.$codes.'&type='.$type.'&start_time='.$start_time.'&end_time='.$end_time.'&query_type=1&size='.$size, 'GET');
   }
 
   /**
